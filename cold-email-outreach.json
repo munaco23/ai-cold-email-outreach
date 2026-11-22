@@ -1,0 +1,533 @@
+{
+  "name": "AI Cold Email Outreach",
+  "nodes": [
+    {
+      "parameters": {
+        "content": "## 📧 AI Cold Email Outreach — Setup\n1. **Google Sheet** with a tab named `Leads` and columns:\n`business_name, first_name, email, website, industry, city, status, sent_at, subject`\nLeave `status` empty for leads you want to email.\n2. Put your Sheet ID into **Get Leads** and **Mark as Sent**, connect Google Sheets credentials.\n3. **Settings** node: your name, company, pitch, sending email and AI model.\n4. **Write Email with AI**: add a Header Auth credential for Groq — name `Authorization`, value `Bearer YOUR_GROQ_API_KEY`.\n5. **Send Email**: add SMTP credential (use a separate, warmed-up outreach domain).\n6. Test with 2-3 rows of your OWN emails first, then activate.\n\nSends max 10/day (change in **Daily Limit**), weekdays 10:00, with 1-3 min gaps.",
+        "height": 420,
+        "width": 520,
+        "color": 4
+      },
+      "id": "2c6fc516-7497-4d71-9cb6-ade6d52541ea",
+      "name": "Setup Instructions",
+      "type": "n8n-nodes-base.stickyNote",
+      "typeVersion": 1,
+      "position": [
+        32,
+        32
+      ]
+    },
+    {
+      "parameters": {},
+      "id": "e69472fc-4aac-4d8d-9d36-dbc793764151",
+      "name": "Test Run",
+      "type": "n8n-nodes-base.manualTrigger",
+      "typeVersion": 1,
+      "position": [
+        64,
+        528
+      ]
+    },
+    {
+      "parameters": {
+        "rule": {
+          "interval": [
+            {
+              "field": "cronExpression",
+              "expression": "0 10 * * 1-5"
+            }
+          ]
+        }
+      },
+      "id": "593f5ee4-18a6-4614-a373-96cd1b4d82be",
+      "name": "Weekdays 10 AM",
+      "type": "n8n-nodes-base.scheduleTrigger",
+      "typeVersion": 1.2,
+      "position": [
+        64,
+        720
+      ]
+    },
+    {
+      "parameters": {
+        "assignments": {
+          "assignments": [
+            {
+              "id": "a685cbfb-4e2d-4d36-967c-060bd8df25d0",
+              "name": "sender_name",
+              "value": "Your Name",
+              "type": "string"
+            },
+            {
+              "id": "9ba79f94-7f81-4111-8a86-89bc87e48a4b",
+              "name": "company_name",
+              "value": "Your Company",
+              "type": "string"
+            },
+            {
+              "id": "63a0c1a6-b15d-4db6-aa8e-fd5bf08972cf",
+              "name": "sender_email",
+              "value": "you@yourdomain.com",
+              "type": "string"
+            },
+            {
+              "id": "75cdc193-3d93-404a-8adc-449cf70d0f6d",
+              "name": "service_pitch",
+              "value": "I'm a freelance AI automation developer. I help small businesses set up AI chatbots for WhatsApp and websites that answer customers 24/7, automatic follow-up with new leads, and automations for repetitive admin work like data entry and appointment reminders, so owners save hours every week.",
+              "type": "string"
+            },
+            {
+              "id": "c9b7230e-b242-40c4-b89d-dd2865aa8ea3",
+              "name": "ai_model",
+              "value": "llama-3.3-70b-versatile",
+              "type": "string"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "id": "50abea2f-3d75-481d-ba4e-9897fa6aea0f",
+      "name": "Settings",
+      "type": "n8n-nodes-base.set",
+      "typeVersion": 3.4,
+      "position": [
+        304,
+        624
+      ]
+    },
+    {
+      "parameters": {
+        "documentId": {
+          "__rl": true,
+          "value": "YOUR_GOOGLE_SHEET_ID",
+          "mode": "id"
+        },
+        "sheetName": {
+          "__rl": true,
+          "value": "Leads",
+          "mode": "name"
+        },
+        "options": {}
+      },
+      "id": "c25eaf25-c803-47cc-bcc7-459c22c39063",
+      "name": "Get Leads",
+      "type": "n8n-nodes-base.googleSheets",
+      "typeVersion": 4.5,
+      "position": [
+        528,
+        624
+      ]
+    },
+    {
+      "parameters": {
+        "conditions": {
+          "options": {
+            "caseSensitive": true,
+            "leftValue": "",
+            "typeValidation": "strict",
+            "version": 1
+          },
+          "conditions": [
+            {
+              "id": "4a826379-f87c-4b90-b6a0-aed927884037",
+              "leftValue": "={{ $json.status }}",
+              "rightValue": "",
+              "operator": {
+                "type": "string",
+                "operation": "empty",
+                "singleValue": true
+              }
+            },
+            {
+              "id": "05a18d16-3d65-48d1-8dfa-9382de3a3aa1",
+              "leftValue": "={{ $json.email }}",
+              "rightValue": "",
+              "operator": {
+                "type": "string",
+                "operation": "notEmpty",
+                "singleValue": true
+              }
+            }
+          ],
+          "combinator": "and"
+        },
+        "options": {}
+      },
+      "id": "3fdf6c3b-1fb8-4c43-808d-a1f954200f8e",
+      "name": "Only Unsent Leads",
+      "type": "n8n-nodes-base.filter",
+      "typeVersion": 2,
+      "position": [
+        752,
+        624
+      ]
+    },
+    {
+      "parameters": {
+        "maxItems": 10
+      },
+      "id": "881915be-c64a-4442-aabd-649d761581a9",
+      "name": "Daily Limit (10)",
+      "type": "n8n-nodes-base.limit",
+      "typeVersion": 1,
+      "position": [
+        960,
+        624
+      ]
+    },
+    {
+      "parameters": {
+        "options": {}
+      },
+      "id": "1f075c8c-3985-4af9-b824-b42be8c7bbc2",
+      "name": "Loop Over Leads",
+      "type": "n8n-nodes-base.splitInBatches",
+      "typeVersion": 3,
+      "position": [
+        1184,
+        624
+      ]
+    },
+    {
+      "parameters": {
+        "url": "={{ $json.website && !$json.website.startsWith('http') ? 'https://' + $json.website : $json.website }}",
+        "options": {
+          "response": {
+            "response": {
+              "responseFormat": "text"
+            }
+          },
+          "timeout": 10000
+        }
+      },
+      "id": "40f3fbbd-95cb-423a-88fa-f8f3c022b1ed",
+      "name": "Read Their Website",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "position": [
+        1408,
+        720
+      ],
+      "onError": "continueRegularOutput"
+    },
+    {
+      "parameters": {
+        "mode": "runOnceForEachItem",
+        "jsCode": "// Gets the lead + website text and builds the AI request\nconst lead = $('Loop Over Leads').item.json;\nconst s = $('Settings').first().json;\n\nconst html = typeof $json.data === 'string' ? $json.data : '';\nconst websiteText = html\n  .replace(/<script[\\s\\S]*?<\\/script>/gi, ' ')\n  .replace(/<style[\\s\\S]*?<\\/style>/gi, ' ')\n  .replace(/<[^>]+>/g, ' ')\n  .replace(/&nbsp;|&amp;|&#\\d+;/g, ' ')\n  .replace(/\\s+/g, ' ')\n  .trim()\n  .slice(0, 3000);\n\nconst system = `You write short, friendly, human B2B cold emails for ${s.sender_name} from ${s.company_name}.\nWhat we offer: ${s.service_pitch}\nRules:\n- 60 to 110 words, plain text, no links, no emojis, no hype words like \"revolutionize\" or \"game-changer\".\n- Open with one specific observation about THEIR business (from the website text or industry). Never invent facts.\n- Suggest 1 concrete automation idea that fits their business (e.g. auto-replies to inquiries, booking, lead follow-up, invoicing, review requests).\n- End with a soft question like \"Worth a quick 15-minute chat?\"\n- Greet by first name if given, otherwise \"Hi there\".\n- Do NOT add a signature.\nReturn ONLY JSON: {\"subject\": \"...\", \"body\": \"...\"}. Subject: 3-6 words, lowercase-friendly, no clickbait.`;\n\nconst user = `Business name: ${lead.business_name || 'unknown'}\nFirst name: ${lead.first_name || ''}\nIndustry: ${lead.industry || 'unknown'}\nCity: ${lead.city || ''}\nWebsite text: ${websiteText || '(not available)'}`;\n\nreturn {\n  json: {\n    ...lead,\n    requestBody: {\n      model: s.ai_model,\n      temperature: 0.7,\n      response_format: { type: 'json_object' },\n      messages: [\n        { role: 'system', content: system },\n        { role: 'user', content: user }\n      ]\n    }\n  }\n};"
+      },
+      "id": "865e94ff-6a17-40dc-bfbd-e09edf0525f6",
+      "name": "Prepare Prompt",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        1632,
+        720
+      ]
+    },
+    {
+      "parameters": {
+        "method": "POST",
+        "url": "https://api.groq.com/openai/v1/chat/completions",
+        "authentication": "genericCredentialType",
+        "genericAuthType": "httpHeaderAuth",
+        "sendBody": true,
+        "specifyBody": "json",
+        "jsonBody": "={{ JSON.stringify($json.requestBody) }}",
+        "options": {
+          "timeout": 60000
+        }
+      },
+      "id": "fef0e81e-7d22-419d-800a-e19f959b6efd",
+      "name": "Write Email with AI",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "position": [
+        1840,
+        720
+      ]
+    },
+    {
+      "parameters": {
+        "mode": "runOnceForEachItem",
+        "jsCode": "// Turns the AI reply into a ready-to-send email\nconst lead = $('Prepare Prompt').item.json;\nconst s = $('Settings').first().json;\n\nlet subject = `quick idea for ${lead.business_name || 'your business'}`;\nlet body = '';\ntry {\n  const c = JSON.parse($json.choices[0].message.content);\n  subject = c.subject || subject;\n  body = c.body || '';\n} catch (e) {}\n\nif (!body) throw new Error('AI did not return an email for ' + lead.email);\n\nconst fullBody = `${body}\n\n${s.sender_name}\n${s.company_name}\n\nP.S. Not relevant? Just reply \"no\" and I won't email again.`;\n\nreturn { json: { email: lead.email, business_name: lead.business_name, subject, body: fullBody } };"
+      },
+      "id": "028a1058-8090-468c-aee6-c8c4cacf525d",
+      "name": "Parse Email",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        2064,
+        720
+      ]
+    },
+    {
+      "parameters": {
+        "fromEmail": "={{ $('Settings').first().json.sender_name }} <{{ $('Settings').first().json.sender_email }}>",
+        "toEmail": "={{ $json.email }}",
+        "subject": "={{ $json.subject }}",
+        "emailFormat": "text",
+        "text": "={{ $json.body }}",
+        "options": {}
+      },
+      "id": "2d1fc3cd-b1eb-49fa-8d25-9739286b3abf",
+      "name": "Send Email",
+      "type": "n8n-nodes-base.emailSend",
+      "typeVersion": 2.1,
+      "position": [
+        2288,
+        720
+      ]
+    },
+    {
+      "parameters": {
+        "operation": "update",
+        "documentId": {
+          "__rl": true,
+          "value": "YOUR_GOOGLE_SHEET_ID",
+          "mode": "id"
+        },
+        "sheetName": {
+          "__rl": true,
+          "value": "Leads",
+          "mode": "name"
+        },
+        "columns": {
+          "mappingMode": "defineBelow",
+          "value": {
+            "email": "={{ $('Parse Email').item.json.email }}",
+            "status": "sent",
+            "sent_at": "={{ $now.toFormat('yyyy-MM-dd HH:mm') }}",
+            "subject": "={{ $('Parse Email').item.json.subject }}"
+          },
+          "matchingColumns": [
+            "email"
+          ],
+          "schema": [
+            {
+              "id": "email",
+              "displayName": "email",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "status",
+              "displayName": "status",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "sent_at",
+              "displayName": "sent_at",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "subject",
+              "displayName": "subject",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            }
+          ]
+        },
+        "options": {}
+      },
+      "id": "8c5d2e38-30cb-4102-b025-27e315ca6c67",
+      "name": "Mark as Sent",
+      "type": "n8n-nodes-base.googleSheets",
+      "typeVersion": 4.5,
+      "position": [
+        2512,
+        720
+      ]
+    },
+    {
+      "parameters": {
+        "amount": "={{ Math.floor(Math.random() * 120) + 60 }}"
+      },
+      "id": "2d8c8837-e40a-40a8-a9db-57ba0c46b553",
+      "name": "Random Delay (1-3 min)",
+      "type": "n8n-nodes-base.wait",
+      "typeVersion": 1.1,
+      "position": [
+        2720,
+        720
+      ]
+    }
+  ],
+  "connections": {
+    "Test Run": {
+      "main": [
+        [
+          {
+            "node": "Settings",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Weekdays 10 AM": {
+      "main": [
+        [
+          {
+            "node": "Settings",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Settings": {
+      "main": [
+        [
+          {
+            "node": "Get Leads",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Get Leads": {
+      "main": [
+        [
+          {
+            "node": "Only Unsent Leads",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Only Unsent Leads": {
+      "main": [
+        [
+          {
+            "node": "Daily Limit (10)",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Loop Over Leads": {
+      "main": [
+        [],
+        [
+          {
+            "node": "Read Their Website",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Read Their Website": {
+      "main": [
+        [
+          {
+            "node": "Prepare Prompt",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Prepare Prompt": {
+      "main": [
+        [
+          {
+            "node": "Write Email with AI",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Write Email with AI": {
+      "main": [
+        [
+          {
+            "node": "Parse Email",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Parse Email": {
+      "main": [
+        [
+          {
+            "node": "Send Email",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Send Email": {
+      "main": [
+        [
+          {
+            "node": "Mark as Sent",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Mark as Sent": {
+      "main": [
+        [
+          {
+            "node": "Random Delay (1-3 min)",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Random Delay (1-3 min)": {
+      "main": [
+        [
+          {
+            "node": "Loop Over Leads",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Daily Limit (10)": {
+      "main": [
+        [
+          {
+            "node": "Loop Over Leads",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    }
+  },
+  "active": false,
+  "settings": {
+    "executionOrder": "v1",
+    "binaryMode": "separate"
+  },
+  "nodeGroups": [],
+  "tags": []
+}
